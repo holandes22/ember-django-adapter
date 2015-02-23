@@ -42,6 +42,48 @@
       <ul class="current">
     
         
+            <li class="toctree-l1 ">
+                <a class="" href="../configuring">Configuring</a>
+            </li>
+        
+
+    
+        
+            <li class="toctree-l1 ">
+                <a class="" href="../extending">Extending</a>
+            </li>
+        
+
+    
+        
+            <li class="toctree-l1 ">
+                <a class="" href="../trailing-slashes">Trailing slashes</a>
+            </li>
+        
+
+    
+        
+            <li class="toctree-l1 ">
+                <a class="" href="../embedded-records">Embedded records</a>
+            </li>
+        
+
+    
+        
+            <li class="toctree-l1 ">
+                <a class="" href="../pagination">Pagination</a>
+            </li>
+        
+
+    
+        
+            <li class="toctree-l1 ">
+                <a class="" href="../coalesce-find-requests">Coalesce find requests</a>
+            </li>
+        
+
+    
+        
             <li class="toctree-l1 current">
                 <a class="current" href=".">Contributing</a>
             </li>
@@ -91,6 +133,25 @@
               <h1 id="contributing-to-ember-django-adapter">Contributing to Ember Django Adapter</h1>
 <p>We welcome all bug reports and pull requests.</p>
 <p>Issues: <a href="https://github.com/dustinfarris/ember-django-adapter/issues">github.com/dustinfarris/ember-django-adapter/issues</a></p>
+<h2 id="local-development">Local Development</h2>
+<p>To run ember-django-adapter locally, you will have to use <code>npm link</code>.</p>
+<pre><code>git clone git@github.com:dustinfarris/ember-django-adapter
+cd ember-django-adapter
+npm i &amp;&amp; bower i
+npm link
+</code></pre>
+
+<p>Then in a test ember-cli project, you will have to install a couple bower dependencies separately.
+These are not actually required in the test ember-cli project, but errors will be thrown if they
+are not present.</p>
+<pre><code>cd test-ember-cli-project
+bower i pretender
+bower i http://sinonjs.org/releases/sinon-1.12.1.js
+npm link ember-django-adapter
+</code></pre>
+
+<p>Now your test project is using a symlinked copy of your local ember-django-adapter, and any changes
+you make to the adapter will be reflected in your project in real-time.</p>
 
             </div>
           </div>
@@ -101,7 +162,7 @@
         <a href="../changelog" class="btn btn-neutral float-right" title="Changelog"/>Next <span class="icon icon-circle-arrow-right"></span></a>
       
       
-        <a href=".." class="btn btn-neutral" title="Introduction"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../coalesce-find-requests" class="btn btn-neutral" title="Coalesce find requests"><span class="icon icon-circle-arrow-left"></span> Previous</a>
       
     </div>
   
@@ -129,7 +190,7 @@
         
             <a class="icon icon-github" style="float: left; color: #fcfcfc"> GitHub</a>
         
-      <span><a href=".." style="color: #fcfcfc;">&laquo; Previous</a></span>
+      <span><a href="../coalesce-find-requests" style="color: #fcfcfc;">&laquo; Previous</a></span>
       <span style="margin-left: 15px"><a href="../changelog" style="color: #fcfcfc">Next &raquo;</a></span>
     </span>
 </div>

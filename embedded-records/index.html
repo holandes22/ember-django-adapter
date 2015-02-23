@@ -5,7 +5,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Changelog - Ember Django Adapter</title>
+  <title>Embedded records - Ember Django Adapter</title>
   
 
   
@@ -63,8 +63,8 @@
 
     
         
-            <li class="toctree-l1 ">
-                <a class="" href="../embedded-records">Embedded records</a>
+            <li class="toctree-l1 current">
+                <a class="current" href=".">Embedded records</a>
             </li>
         
 
@@ -91,8 +91,8 @@
 
     
         
-            <li class="toctree-l1 current">
-                <a class="current" href=".">Changelog</a>
+            <li class="toctree-l1 ">
+                <a class="" href="../changelog">Changelog</a>
             </li>
         
 
@@ -117,7 +117,7 @@
           <div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
     <li><a href="..">Docs</a> &raquo;</li>
-    <li>Changelog</li>
+    <li>Embedded records</li>
       <li class="wy-breadcrumbs-aside">
         
           
@@ -130,44 +130,83 @@
 </div>
           <div role="main">
             <div class="section">
-              <h1 id="ember-django-adapter-changelog">ember-django-adapter Changelog</h1>
-<h2 id="master">Master</h2>
-<ul>
-<li>[BREAKING ENHANCEMENT] Remove trailing slashes environment config
-  (<a href="https://github.com/dustinfarris/ember-django-adapter/pull/67">#67</a>)</li>
-<li>[DOCS] Add Google Analytics to documentation site
-  (<a href="https://github.com/dustinfarris/ember-django-adapter/pull/69">#69</a>)</li>
-<li>[ENHANCEMENT] Support added for coalesceFindRequests
-  (<a href="https://github.com/dustinfarris/ember-django-adapter/pull/68">#68</a>)</li>
-<li>[INTERNAL] Revised goals for the adapter
-  (<a href="https://github.com/dustinfarris/ember-django-adapter/pull/70">#70</a>)</li>
-</ul>
-<h2 id="052">0.5.2</h2>
-<ul>
-<li>[BUGFIX] Return jqXHR for non-400 errors
-  (<a href="https://github.com/dustinfarris/ember-django-adapter/pull/62">#62</a>)</li>
-<li>[BREAKING BUGFIX] Set default host to localhost:8000
-  (<a href="https://github.com/dustinfarris/ember-django-adapter/pull/64">#64</a>)</li>
-<li>[DOCS] Update installation instructions
-  (<a href="https://github.com/dustinfarris/ember-django-adapter/pull/65">#65</a>)</li>
-</ul>
-<h2 id="051">0.5.1</h2>
-<ul>
-<li>[ENHANCEMENT] Add support for pagination metadata
-  (<a href="https://github.com/dustinfarris/ember-django-adapter/pull/45">#45</a>)</li>
-<li>[ENHANCEMENT] Add documentation for contributing
-  (<a href="https://github.com/dustinfarris/ember-django-adapter/pull/49">#49</a>)</li>
-<li>[ENHANCEMENT] Add blueprints and support for embedded records
-  (<a href="https://github.com/dustinfarris/ember-django-adapter/pull/51">#51</a>)</li>
-<li>[ENHANCEMENT] Add option to remove trailing slashes
-  (<a href="https://github.com/dustinfarris/ember-django-adapter/pull/50">#50</a>)</li>
-<li>[ENHANCEMENT] Test coverage for all supported versions of ember-data
-  (<a href="https://github.com/dustinfarris/ember-django-adapter/pull/56">#56</a>)</li>
-</ul>
-<h2 id="050">0.5.0</h2>
-<ul>
-<li>[BREAKING REFACTOR] Rewrite <a href="https://github.com/toranb/ember-data-django-rest-adapter">toranb/ember-data-django-rest-adapter</a> as an ember-cli addon</li>
-</ul>
+              <h1 id="embedded-records">Embedded Records</h1>
+<p>Let's say you've set up a serializer in DRF that has embedded records.  For example:</p>
+<pre><code class="python">class Person(models.Model):
+    name = models.CharField(max_length=20)
+
+
+class Pet(models.Model):
+    name = models.CharField(max_length=20)
+    owner = models.ForeignKey(Person, related_name='pets')
+
+
+class PetSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Pet
+
+
+class PersonSerializer(serializers.ModelSerializer):
+    pets = PetSerializer(many=True)
+
+    class Meta:
+        model = Person
+</code></pre>
+
+<p>On the Ember side, your models would look like this:</p>
+<pre><code class="js">// app/models/pet.js
+
+import DS from 'ember-data';
+
+export default DS.Model.extend({
+  person: DS.belongsTo('person'),
+  name: DS.attr('string')
+});
+</code></pre>
+
+<pre><code class="js">// app/models/person.js
+
+import DS from 'ember-data';
+
+export default DS.Model.extend({
+  name: DS.attr('string'),
+  pets: DS.hasMany('pet')
+});
+</code></pre>
+
+<p>The API's JSON response from such a setup would look something like this:</p>
+<pre><code class="json">{
+  &quot;id&quot;: 2,
+  &quot;name&quot;: &quot;Frank&quot;,
+  &quot;pets&quot;: [
+    { &quot;id&quot;: 1, &quot;name&quot;: &quot;Spot&quot; },
+    { &quot;id&quot;: 2, &quot;name&quot;: &quot;Fido&quot; }
+  ]
+}
+</code></pre>
+
+<p>Ember Data supports this sort of response (since 1.0.0-beta.10), but you will have to extend the
+serializer for this model to make Ember Data aware of it.</p>
+<p>In your Ember project, create a DRF serializer for your Person model.</p>
+<pre><code class="console">ember generate drf-serializer person
+</code></pre>
+
+<p>This creates a skeleton serializer that extends the DRF serializer in app/serializers/person.js.
+Modify this file to support the embedded records:</p>
+<pre><code class="js">// app/serializers/person.js
+
+import DRFSerializer from './drf';
+import DS from 'ember-data';
+
+export default DRFSerializer.extend(DS.EmbeddedRecordsMixin, {
+  attrs: {
+    pets: { embedded: 'always' }
+  }
+});
+</code></pre>
+
+<h3 id="writable-nested-records">Writable nested records</h3>
+<p>Writable nested records are not supported by the adapter at this time.</p>
 
             </div>
           </div>
@@ -175,8 +214,10 @@
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
+        <a href="../pagination" class="btn btn-neutral float-right" title="Pagination"/>Next <span class="icon icon-circle-arrow-right"></span></a>
       
-        <a href="../contributing" class="btn btn-neutral" title="Contributing"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+      
+        <a href="../trailing-slashes" class="btn btn-neutral" title="Trailing slashes"><span class="icon icon-circle-arrow-left"></span> Previous</a>
       
     </div>
   
@@ -204,8 +245,8 @@
         
             <a class="icon icon-github" style="float: left; color: #fcfcfc"> GitHub</a>
         
-      <span><a href="../contributing" style="color: #fcfcfc;">&laquo; Previous</a></span>
-      <span style="margin-left: 15px"><a href="" style="color: #fcfcfc">Next &raquo;</a></span>
+      <span><a href="../trailing-slashes" style="color: #fcfcfc;">&laquo; Previous</a></span>
+      <span style="margin-left: 15px"><a href="../pagination" style="color: #fcfcfc">Next &raquo;</a></span>
     </span>
 </div>
 </body>
