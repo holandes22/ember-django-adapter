@@ -1,6 +1,11 @@
 import DS from 'ember-data';
 import Ember from 'ember';
 
+let errorMessages = {
+  401: 'Unauthorized',
+  500: 'Internal Server Error'
+};
+
 /**
  * The Django REST Framework adapter allows your store to communicate
  * with Django REST Framework-built APIs by adjusting the JSON and URL
@@ -58,43 +63,64 @@ export default DS.RESTAdapter.extend({
   },
 
   /**
-   * Takes an ajax response, and returns an error payload.
-   *
-   * Returning a `DS.InvalidError` from this method will cause the
-   * record to transition into the `invalid` state and make the
-   * `errors` object available on the record.
-   *
-   * This function should return the entire payload as received from the
-   * server. Error object extraction and normalization of model errors
-   * should be performed by `extractErrors` on the serializer.
-   *
-   * @method ajaxError
-   * @param  {Object} jqXHR
-   * @return {DS.InvalidError} or {Object} jqXHR
-   */
-  ajaxError: function(jqXHR) {
-    var error = this._super(jqXHR);
+    Takes an ajax response, and returns the json payload or an error.
 
-    if (jqXHR && jqXHR.status === 400) {
+    By default this hook just returns the json payload passed to it.
+    You might want to override it in two cases:
 
-      var jsonErrors;
-      try {
-        jsonErrors = Ember.$.parseJSON(jqXHR.responseText);
-      } catch (SyntaxError) {
-        // This happens with some errors (e.g. 500).
-        return error;
-      }
+    1. Your API might return useful results in the response headers.
+    Response headers are passed in as the second argument.
 
-      // The field errors need to be in an `errors` hash to ensure
-      // `extractErrors` / `normalizeErrors` functions get called
-      // on the serializer.
-      var convertedJsonErrors = {};
-      convertedJsonErrors['errors'] = jsonErrors;
-      return new DS.InvalidError(convertedJsonErrors);
+    2. Your API might return errors as successful responses with status code
+    200 and an Errors text or object. You can return a `DS.InvalidError` or a
+    `DS.AdapterError` (or a sub class) from this hook and it will automatically
+    reject the promise and put your record into the invalid or error state.
 
-    } else {
-      return error;
+    Returning a `DS.InvalidError` from this method will cause the
+    record to transition into the `invalid` state and make the
+    `errors` object available on the record. When returning an
+    `DS.InvalidError` the store will attempt to normalize the error data
+    returned from the server using the serializer's `extractErrors`
+    method.
+
+    @method handleResponse
+    @param  {Number} status
+    @param  {Object} headers
+    @param  {Object} payload
+    @return {Object | DS.AdapterError} response
+  */
+  handleResponse: function(status, headers, payload) {
+    if (this.isSuccess(status, headers, payload)) {
+      return payload;
+    } else if (this.isInvalid(status, headers, payload)) {
+      return new DS.InvalidError({ errors: this._camelizeAttributes(payload) });
     }
+
+    if (Object.getOwnPropertyNames(payload).length === 0) {
+      payload = '';
+    } else if (payload.detail) {
+      payload = payload.detail;
+    }
+    let errors = this.normalizeErrorResponse(status, headers, payload);
+
+    if (errorMessages[status]) {
+      return new DS.AdapterError(errors, errorMessages[status]);
+    }
+    return new DS.AdapterError(errors);
+  },
+
+  isInvalid: function(status) {
+    return status === 400;
+  },
+
+  _camelizeAttributes: function(obj) {
+    let newObj = {};
+    for (let key in obj) {
+      if (obj.hasOwnProperty(key)) {
+        newObj[Ember.String.camelize(key)] = obj[key];
+      }
+    }
+    return newObj;
   },
 
   /**

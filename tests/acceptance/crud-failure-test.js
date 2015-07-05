@@ -67,12 +67,13 @@ test('Permission denied error', function(assert) {
 
   return Ember.run(function() {
 
-    return store.find('post', 1).then({}, function(response) {
+    return store.findRecord('post', 1).then({}, function(response) {
+      const error = response.errors[0];
 
-      assert.ok(response);
-      assert.equal(response.status, 401);
-      assert.equal(response.statusText, 'Unauthorized');
-      assert.equal(response.responseText, JSON.stringify({detail: 'Authentication credentials were not provided.'}));
+      assert.ok(error);
+      assert.equal(error.status, 401);
+      assert.equal(error.details, 'Authentication credentials were not provided.');
+      assert.equal(response.message, 'Unauthorized');
     });
   });
 });
@@ -83,11 +84,12 @@ test('Server error', function(assert) {
   return Ember.run(function() {
 
     return store.find('post', 2).then({}, function(response) {
+      const error = response.errors[0];
 
       assert.ok(response);
-      assert.equal(response.status, 500);
-      assert.equal(response.statusText, 'Internal Server Error');
-      assert.equal(response.responseText, '<h1>Server Error (500)</h1>');
+      assert.equal(error.status, 500);
+      assert.equal(error.details, '<h1>Server Error (500)</h1>');
+      assert.equal(response.message, 'Internal Server Error');
     });
   });
 });
@@ -103,17 +105,17 @@ test('Create field errors', function(assert) {
     });
 
     return post.save().then({}, function(response) {
-
+      const details = response.errors[0].details;
       assert.ok(response);
       assert.ok(response.errors);
 
       // Test camelCase field.
-      assert.equal(response.errors.postTitle.length, 1);
-      assert.equal(response.errors.postTitle[0], 'This field is required.');
+      assert.equal(details.postTitle.length, 1);
+      assert.equal(details.postTitle[0], 'This field is required.');
 
       // Test non-camelCase field.
-      assert.equal(response.errors.body.length, 1);
-      assert.equal(response.errors.body[0], 'This field is required.');
+      assert.equal(details.body.length, 1);
+      assert.equal(details.body[0], 'This field is required.');
     });
   });
 });
@@ -132,17 +134,18 @@ test('Update field errors', function(assert) {
       assert.equal(post.get('isDirty'), true);
 
       post.save().then({}, function(response) {
+        const details = response.errors[0].details;
 
         assert.ok(response);
         assert.ok(response.errors);
 
         // Test camelCase field.
-        assert.equal(response.errors.postTitle.length, 1);
-        assert.equal(response.errors.postTitle[0], 'Ensure this value has at most 50 characters (it has 53).');
+        assert.equal(details.postTitle.length, 1);
+        assert.equal(details.postTitle[0], 'Ensure this value has at most 50 characters (it has 53).');
 
         // Test non-camelCase field.
-        assert.equal(response.errors.body.length, 1);
-        assert.equal(response.errors.body[0], 'This field is required.');
+        assert.equal(details.body.length, 1);
+        assert.equal(details.body[0], 'This field is required.');
       });
     });
   });
