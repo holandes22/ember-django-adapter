@@ -77,7 +77,6 @@ test('handleResponse - returns error with internal server error if 500', functio
         payload = {},
         adapter = this.subject();
   var error = adapter.handleResponse(status, headers, payload);
-  console.log(error);
   assert.equal(error.errors[0].details, '');
   assert.equal(error.message, 'Internal Server Error');
 });

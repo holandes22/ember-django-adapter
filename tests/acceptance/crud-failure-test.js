@@ -27,7 +27,7 @@ module('Acceptance: CRUD Failure', {
       // Server error
       this.get('/test-api/posts/2/', function(request) {
         // This is the default error page for Django when DEBUG is set to False.
-        return [500, {'Content-Type': 'text/html'}, '<h1>Server Error (500)</h1>'];
+        return [500, {'Content-Type': 'application/json'}, JSON.stringify({detail: 'Something bad'})];
       });
 
       // Create field errors
@@ -83,12 +83,12 @@ test('Server error', function(assert) {
 
   return Ember.run(function() {
 
-    return store.find('post', 2).then({}, function(response) {
+    return store.findRecord('post', 2).then({}, function(response) {
       const error = response.errors[0];
 
       assert.ok(response);
       assert.equal(error.status, 500);
-      assert.equal(error.details, '<h1>Server Error (500)</h1>');
+      assert.equal(error.details, 'Something bad');
       assert.equal(response.message, 'Internal Server Error');
     });
   });
@@ -125,7 +125,7 @@ test('Update field errors', function(assert) {
 
   return Ember.run(function() {
 
-    return store.find('post', 3).then(function(post) {
+    return store.findRecord('post', 3).then(function(post) {
 
       assert.ok(post);
       assert.equal(post.get('isDirty'), false);
