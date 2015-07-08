@@ -1,7 +1,7 @@
 import DS from 'ember-data';
 import Ember from 'ember';
 
-const errorMessages = {
+const ERROR_MESSAGES = {
   401: 'Unauthorized',
   500: 'Internal Server Error'
 };
@@ -93,7 +93,7 @@ export default DS.RESTAdapter.extend({
     if (this.isSuccess(status, headers, payload)) {
       return payload;
     } else if (this.isInvalid(status, headers, payload)) {
-      return new DS.InvalidError(this._drfErrorToJsonAPIError(payload));
+      return new DS.InvalidError(this._getValidationErrors(payload));
     }
 
     if (Object.getOwnPropertyNames(payload).length === 0) {
@@ -103,8 +103,8 @@ export default DS.RESTAdapter.extend({
     }
     let errors = this.normalizeErrorResponse(status, headers, payload);
 
-    if (errorMessages[status]) {
-      return new DS.AdapterError(errors, errorMessages[status]);
+    if (ERROR_MESSAGES[status]) {
+      return new DS.AdapterError(errors, ERROR_MESSAGES[status]);
     }
     return new DS.AdapterError(errors);
   },
@@ -113,7 +113,7 @@ export default DS.RESTAdapter.extend({
     return status === 400;
   },
 
-  _drfErrorToJsonAPIError: function(payload) {
+  _getValidationErrors: function(payload) {
     let out = [];
     for (let key in payload) {
       if (payload.hasOwnProperty(key)) {
