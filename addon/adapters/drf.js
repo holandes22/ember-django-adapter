@@ -1,7 +1,7 @@
 import DS from 'ember-data';
 import Ember from 'ember';
 
-let errorMessages = {
+const errorMessages = {
   401: 'Unauthorized',
   500: 'Internal Server Error'
 };
@@ -93,7 +93,7 @@ export default DS.RESTAdapter.extend({
     if (this.isSuccess(status, headers, payload)) {
       return payload;
     } else if (this.isInvalid(status, headers, payload)) {
-      return new DS.InvalidError({ errors: this._camelizeAttributes(payload) });
+      return new DS.InvalidError(this._drfErrorToJsonAPIError(payload));
     }
 
     if (Object.getOwnPropertyNames(payload).length === 0) {
@@ -113,15 +113,22 @@ export default DS.RESTAdapter.extend({
     return status === 400;
   },
 
-  _camelizeAttributes: function(obj) {
-    let newObj = {};
-    for (let key in obj) {
-      if (obj.hasOwnProperty(key)) {
-        newObj[Ember.String.camelize(key)] = obj[key];
+  _drfErrorToJsonAPIError: function(payload) {
+    let out = [];
+    for (let key in payload) {
+      if (payload.hasOwnProperty(key)) {
+        payload[key].forEach((error) => {
+          out.push({
+            source: { pointer: `data/attributes/${key}`},
+            details: error,
+            title: 'Invalid Attribute'
+          });
+        });
       }
     }
-    return newObj;
+    return out;
   },
+
 
   /**
    * Fetch several records together if `coalesceFindRequests` is true.

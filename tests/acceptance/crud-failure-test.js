@@ -34,7 +34,7 @@ module('Acceptance: CRUD Failure', {
       this.post('/test-api/posts/', function(request) {
         return [400, {'Content-Type': 'application/json'}, JSON.stringify({
           post_title: ['This field is required.'],
-          body: ['This field is required.']
+          body: ['This field is required.', 'This field cannot be blank.']
         })];
       });
 
@@ -95,7 +95,7 @@ test('Server error', function(assert) {
 });
 
 test('Create field errors', function(assert) {
-  assert.expect(6);
+  assert.expect(8);
 
   return Ember.run(function() {
 
@@ -105,17 +105,20 @@ test('Create field errors', function(assert) {
     });
 
     return post.save().then({}, function(response) {
-      const details = response.errors[0].details;
+      const postTitleErrors = post.get('errors.postTitle'),
+            bodyErrors = post.get('errors.body');
       assert.ok(response);
       assert.ok(response.errors);
+      assert.equal(post.get('isValid'), false);
 
       // Test camelCase field.
-      assert.equal(details.postTitle.length, 1);
-      assert.equal(details.postTitle[0], 'This field is required.');
+      assert.equal(postTitleErrors.length, 1);
+      assert.equal(postTitleErrors[0].message, 'This field is required.');
 
       // Test non-camelCase field.
-      assert.equal(details.body.length, 1);
-      assert.equal(details.body[0], 'This field is required.');
+      assert.equal(bodyErrors.length, 2);
+      assert.equal(bodyErrors[0].message, 'This field is required.');
+      assert.equal(bodyErrors[1].message, 'This field cannot be blank.');
     });
   });
 });
@@ -126,7 +129,6 @@ test('Update field errors', function(assert) {
   return Ember.run(function() {
 
     return store.findRecord('post', 3).then(function(post) {
-
       assert.ok(post);
       assert.equal(post.get('isDirty'), false);
       post.set('postTitle', 'Lorem ipsum dolor sit amet, consectetur adipiscing el');
@@ -134,18 +136,19 @@ test('Update field errors', function(assert) {
       assert.equal(post.get('isDirty'), true);
 
       post.save().then({}, function(response) {
-        const details = response.errors[0].details;
+        const postTitleErrors = post.get('errors.postTitle'),
+              bodyErrors = post.get('errors.body');
 
         assert.ok(response);
         assert.ok(response.errors);
 
         // Test camelCase field.
-        assert.equal(details.postTitle.length, 1);
-        assert.equal(details.postTitle[0], 'Ensure this value has at most 50 characters (it has 53).');
+        assert.equal(postTitleErrors.length, 1);
+        assert.equal(postTitleErrors[0].message, 'Ensure this value has at most 50 characters (it has 53).');
 
         // Test non-camelCase field.
-        assert.equal(details.body.length, 1);
-        assert.equal(details.body[0], 'This field is required.');
+        assert.equal(bodyErrors.length, 1);
+        assert.equal(bodyErrors[0].message, 'This field is required.');
       });
     });
   });

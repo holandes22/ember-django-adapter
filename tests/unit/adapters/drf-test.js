@@ -45,12 +45,24 @@ test('buildURL - no trailing slashes', function(assert) {
 test('handleResponse - returns invalid error if 400 response', function(assert) {
   const headers = {},
         status = 400,
-        payload = { name: ['This field cannot be blank.'] };
+        payload = {
+          name: ['This field cannot be blank.'],
+          post_title: ['This field cannot be blank.', 'This field cannot be empty.']
+        };
 
   var adapter = this.subject();
   var error = adapter.handleResponse(status, headers, payload);
-  assert.equal(error.errors[0].details.name[0], 'This field cannot be blank.');
+  assert.equal(error.errors[0].details, 'This field cannot be blank.');
+  assert.equal(error.errors[0].source.pointer, 'data/attributes/name');
   assert.equal(error.errors[0].title, 'Invalid Attribute');
+
+  assert.equal(error.errors[1].details, 'This field cannot be blank.');
+  assert.equal(error.errors[1].source.pointer, 'data/attributes/post_title');
+  assert.equal(error.errors[1].title, 'Invalid Attribute');
+
+  assert.equal(error.errors[2].details, 'This field cannot be empty.');
+  assert.equal(error.errors[2].source.pointer, 'data/attributes/post_title');
+  assert.equal(error.errors[2].title, 'Invalid Attribute');
 });
 
 test('handleResponse - returns error if not 400 response', function(assert) {
