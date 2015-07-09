@@ -21,6 +21,8 @@ const ERROR_MESSAGES = {
 export default DS.RESTAdapter.extend({
   defaultSerializer: "DS/djangoREST",
   addTrailingSlashes: true,
+  nonFieldErrorsKey: 'non_field_errors',
+
 
   /**
    * Determine the pathname for a given type.
@@ -118,11 +120,18 @@ export default DS.RESTAdapter.extend({
     for (let key in payload) {
       if (payload.hasOwnProperty(key)) {
         payload[key].forEach((error) => {
-          out.push({
-            source: { pointer: `data/attributes/${key}`},
-            details: error,
-            title: 'Invalid Attribute'
-          });
+          if (key === this.get('nonFieldErrorsKey')) {
+            out.push({
+              meta: {key: key},
+              detail: error
+            });
+          } else {
+            out.push({
+              source: { pointer: `data/attributes/${key}`},
+              details: error,
+              title: 'Invalid Attribute'
+            });
+          }
         });
       }
     }

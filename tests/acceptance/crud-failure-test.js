@@ -30,8 +30,21 @@ module('Acceptance: CRUD Failure', {
         return [500, {'Content-Type': 'application/json'}, JSON.stringify({detail: 'Something bad'})];
       });
 
+      // Authentication Invalid error
+      this.post('/test-api/posts/3', function(request) {
+        return [400, {'Content-Type': 'application/json'}, JSON.stringify({name: 'error 1', non_field_errors: 'error 2'})];
+      });
+
+
       // Create field errors
       this.post('/test-api/posts/', function(request) {
+        var data = JSON.parse(request.requestBody);
+        if (data.body === 'non_field_errors') {
+          return [400, {'Content-Type': 'application/json'}, JSON.stringify({
+            body: ['error 1'],
+            non_field_errors: ['error 2', 'error 3']
+          })];
+        }
         return [400, {'Content-Type': 'application/json'}, JSON.stringify({
           post_title: ['This field is required.'],
           body: ['This field is required.', 'This field cannot be blank.']
@@ -90,6 +103,37 @@ test('Server error', function(assert) {
       assert.equal(error.status, 500);
       assert.equal(error.details, 'Something bad');
       assert.equal(response.message, 'Internal Server Error');
+    });
+  });
+});
+
+test('Invalid with non field errors', function(assert) {
+  //assert.expect(8);
+
+  return Ember.run(function() {
+
+    var post = store.createRecord('post', {
+      postTitle: '',
+      body: 'non_field_errors'
+    });
+
+    return post.save().then({}, function(response) {
+      const bodyErrors = post.get('errors.body'),
+            nonFieldErrors1 = response.errors[1],
+            nonFieldErrors2 = response.errors[2];
+      assert.ok(response);
+      assert.ok(response.errors);
+      assert.equal(post.get('isValid'), false);
+
+      assert.equal(bodyErrors.length, 1);
+      assert.equal(bodyErrors[0].message, 'error 1');
+
+      assert.equal(nonFieldErrors1.detail, 'error 2');
+      assert.equal(nonFieldErrors1.meta.key, 'non_field_errors');
+
+      assert.equal(nonFieldErrors2.detail, 'error 3');
+      assert.equal(nonFieldErrors2.meta.key, 'non_field_errors');
+
     });
   });
 });
