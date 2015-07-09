@@ -95,7 +95,7 @@ export default DS.RESTAdapter.extend({
     if (this.isSuccess(status, headers, payload)) {
       return payload;
     } else if (this.isInvalid(status, headers, payload)) {
-      return new DS.InvalidError(this._getValidationErrors(payload));
+      return new DS.InvalidError(this._drfToJsonAPIValidationErrors(payload));
     }
 
     if (Object.getOwnPropertyNames(payload).length === 0) {
@@ -115,7 +115,7 @@ export default DS.RESTAdapter.extend({
     return status === 400;
   },
 
-  _getValidationErrors: function(payload) {
+  _drfToJsonAPIValidationErrors: function(payload) {
     let out = [];
     for (let key in payload) {
       if (payload.hasOwnProperty(key)) {
@@ -128,7 +128,7 @@ export default DS.RESTAdapter.extend({
           } else {
             out.push({
               source: { pointer: `data/attributes/${key}`},
-              details: error,
+              detail: error,
               title: 'Invalid Attribute'
             });
           }

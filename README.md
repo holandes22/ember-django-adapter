@@ -6,8 +6,8 @@ Ember Django Adapter
 [![Ember Observer Score](http://emberobserver.com/badges/ember-django-adapter.svg)](http://emberobserver.com/addons/ember-django-adapter)
 
 This Ember addon enables the use of [Django REST Framework][] as an API
-backend. The addon is compatible with [ember-cli][] version 0.2.7 and
-higher, and Ember Data v1.0.0-beta.18.
+backend. The addon is compatible with [ember-cli][] version 0.2.7 and higher, Ember 1.12.1 and
+higher, and Ember Data v1.13.5.
 
 
 Community

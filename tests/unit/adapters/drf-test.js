@@ -52,15 +52,15 @@ test('handleResponse - returns invalid error if 400 response', function(assert) 
 
   var adapter = this.subject();
   var error = adapter.handleResponse(status, headers, payload);
-  assert.equal(error.errors[0].details, 'This field cannot be blank.');
+  assert.equal(error.errors[0].detail, 'This field cannot be blank.');
   assert.equal(error.errors[0].source.pointer, 'data/attributes/name');
   assert.equal(error.errors[0].title, 'Invalid Attribute');
 
-  assert.equal(error.errors[1].details, 'This field cannot be blank.');
+  assert.equal(error.errors[1].detail, 'This field cannot be blank.');
   assert.equal(error.errors[1].source.pointer, 'data/attributes/post_title');
   assert.equal(error.errors[1].title, 'Invalid Attribute');
 
-  assert.equal(error.errors[2].details, 'This field cannot be empty.');
+  assert.equal(error.errors[2].detail, 'This field cannot be empty.');
   assert.equal(error.errors[2].source.pointer, 'data/attributes/post_title');
   assert.equal(error.errors[2].title, 'Invalid Attribute');
 });
@@ -71,7 +71,7 @@ test('handleResponse - returns error if not 400 response', function(assert) {
         payload = { detail: 'You do not have permission to perform this action.'},
         adapter = this.subject();
   var error = adapter.handleResponse(status, headers, payload);
-  assert.equal(error.errors[0].details, payload.detail);
+  assert.equal(error.errors[0].detail, payload.detail);
 });
 
 test('handleResponse - returns error if payload is empty', function(assert) {
@@ -80,7 +80,7 @@ test('handleResponse - returns error if payload is empty', function(assert) {
         payload = {},
         adapter = this.subject();
   var error = adapter.handleResponse(status, headers, payload);
-  assert.equal(error.errors[0].details, '');
+  assert.equal(error.errors[0].detail, '');
 });
 
 test('handleResponse - returns error with internal server error if 500', function(assert) {
@@ -89,7 +89,7 @@ test('handleResponse - returns error with internal server error if 500', functio
         payload = {},
         adapter = this.subject();
   var error = adapter.handleResponse(status, headers, payload);
-  assert.equal(error.errors[0].details, '');
+  assert.equal(error.errors[0].detail, '');
   assert.equal(error.message, 'Internal Server Error');
 });
 

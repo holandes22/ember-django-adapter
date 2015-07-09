@@ -85,7 +85,7 @@ test('Permission denied error', function(assert) {
 
       assert.ok(error);
       assert.equal(error.status, 401);
-      assert.equal(error.details, 'Authentication credentials were not provided.');
+      assert.equal(error.detail, 'Authentication credentials were not provided.');
       assert.equal(response.message, 'Unauthorized');
     });
   });
@@ -101,7 +101,7 @@ test('Server error', function(assert) {
 
       assert.ok(response);
       assert.equal(error.status, 500);
-      assert.equal(error.details, 'Something bad');
+      assert.equal(error.detail, 'Something bad');
       assert.equal(response.message, 'Internal Server Error');
     });
   });
